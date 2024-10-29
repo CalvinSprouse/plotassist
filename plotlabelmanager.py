@@ -5,6 +5,16 @@
 class PlotLabel:
 
     def __init__(self, key: object, text: str, plt_args: dict):
+        # ensure that plt_args is at least an empty dict
+        if plt_args is None:
+            raise ValueError("plt_args cannot be None")
+        if not isinstance(plt_args, dict):
+            raise ValueError("plt_args must be a dict")
+
+        # ensure text is a string
+        if not isinstance(text, str):
+            raise ValueError("text must be a string")
+
         # save data
         self.key = key
         self.text = text
@@ -22,7 +32,7 @@ class PlotLabel:
     def get_plt_args(self) -> dict:
         return self.plt_args
 
-    def access_label(self) -> str | None:
+    def access_text(self) -> str | None:
         # check for first access
         if not self.first_access:
             # return nothing to prevent duplicate entries
@@ -45,6 +55,9 @@ class PlotLabelManager:
     def key_exists(self, key: object) -> bool:
         return key in self.labels
 
+    def get_key_index(self, key: object) -> int:
+        return list(self.labels.keys()).index(key)
+
     def add(self, key: object, text: str, plt_args: dict) -> None:
         # check if key is already in list
         if self.key_exists(key):
@@ -54,7 +67,7 @@ class PlotLabelManager:
         label = PlotLabel(key, text, plt_args)
         self._append(label)
 
-    def get_plt_args(self, key: object, include_label: bool = False) -> dict:
+    def get_plt_args(self, key: object, include_text: bool = False) -> dict:
         # check if key exists
         if not self.key_exists(key):
             raise ValueError(f"Key '{key}' not found")
@@ -63,17 +76,17 @@ class PlotLabelManager:
         return_dict = self.labels[key].get_plt_args()
 
         # check for label return
-        if include_label:
-            return_dict["label"] = self.get_label(key)
+        if include_text:
+            return_dict['label'] = self.get_text(key)
 
         return return_dict
 
-    def get_label(self, key: object) -> str | None:
+    def get_text(self, key: object) -> str | None:
         # check if key exists
         if not self.key_exists(key):
             raise ValueError(f"Key '{key}' not found")
 
-        return self.labels[key].access_label()
+        return self.labels[key].access_text()
 
     def get_all_labels(self) -> list[PlotLabel]:
         return self.labels.values()
