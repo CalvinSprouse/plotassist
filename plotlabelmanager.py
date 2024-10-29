@@ -32,15 +32,11 @@ class PlotLabel:
     def get_plt_args(self) -> dict:
         return self.plt_args
 
-    def access_text(self) -> str | None:
-        # check for first access
-        if not self.first_access:
-            # return nothing to prevent duplicate entries
-            return None
+    def get_first_access(self) -> bool:
+        return self.first_access
 
-        # return the label text and record first access complete
-        self.first_access = False
-        return self.text
+    def set_first_access(self, value: bool) -> None:
+        self.first_access = value
 
 
 class PlotLabelManager:
@@ -49,14 +45,18 @@ class PlotLabelManager:
         # define a dict to hold PlotLabel objects
         self.labels = {}
 
-    def _append(self, plot_label: PlotLabel) -> None:
-        self.labels[plot_label.get_key()] = plot_label
-
     def key_exists(self, key: object) -> bool:
         return key in self.labels
 
     def get_key_index(self, key: object) -> int:
+        # check that key is in labels
+        if not self.key_exists(key):
+            raise ValueError(f"Key '{key}' not found")
+
         return list(self.labels.keys()).index(key)
+
+    def get_key_count(self) -> int:
+        return len(self.labels)
 
     def add(self, key: object, text: str, plt_args: dict) -> None:
         # check if key is already in list
@@ -64,16 +64,12 @@ class PlotLabelManager:
             raise ValueError(f"Key '{key}' already exists")
 
         # create a new PlotLabel object and append
-        label = PlotLabel(key, text, plt_args)
-        self._append(label)
+        plot_label = PlotLabel(key, text, plt_args)
+        self.labels[plot_label.get_key()] = plot_label
 
-    def get_plt_args(self, key: object, include_text: bool = False) -> dict:
-        # check if key exists
-        if not self.key_exists(key):
-            raise ValueError(f"Key '{key}' not found")
-
+    def get_args(self, key: object, include_text: bool = False) -> dict:
         # prepare the return dict
-        return_dict = self.labels[key].get_plt_args()
+        return_dict = self.get_plot_label(key).get_plt_args()
 
         # check for label return
         if include_text:
@@ -82,11 +78,20 @@ class PlotLabelManager:
         return return_dict
 
     def get_text(self, key: object) -> str | None:
+        # return de-duplicated label text
+        plot_label = self.get_plot_label(key)
+        if plot_label.get_first_access():
+            plot_label.set_first_access(False)
+            return plot_label.get_text()
+
+        return None
+
+    def get_all_labels(self) -> list[PlotLabel]:
+        return self.labels.values()
+
+    def get_plot_label(self, key: object) -> PlotLabel:
         # check if key exists
         if not self.key_exists(key):
             raise ValueError(f"Key '{key}' not found")
 
-        return self.labels[key].access_text()
-
-    def get_all_labels(self) -> list[PlotLabel]:
-        return self.labels.values()
+        return self.labels[key]
