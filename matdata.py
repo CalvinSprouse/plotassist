@@ -1,6 +1,8 @@
 # matdata.py
 
 # A class to help with loading and accessing data from MATLAB mat files.
+# TODO: Add docstrings
+# TODO: Refine comments
 
 # imports
 from os import PathLike
