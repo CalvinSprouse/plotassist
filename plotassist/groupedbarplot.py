@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
+from pyparsing import col
 
 
 class GroupedBarPlot:
@@ -175,11 +176,11 @@ class GroupedBarPlot:
         for _, bar_list in axis_param_dict['bar_pos_dict'].items():
             for j, (cat, bar_center, height) in enumerate(bar_list):
                 # attempt to get the label from the label dict
-                if not color_override:
+                if not label_override:
                     bar_kwargs['label'] = self.label_dict.get(cat, cat)
 
                 # get the color and handle errors
-                if not label_override:
+                if not color_override:
                     try:
                         bar_kwargs['facecolor'] = self.colormap(j)
                     except ValueError as e:
