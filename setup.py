@@ -13,7 +13,7 @@ setup(
     author='Calvin Sprouse',
     author_email='calvinsprouse@proton.me',
     description='A package for handling MATLAB data and working with Matplotlib plots',
-    long_description=open('README.md').read(),
+    long_description=open('README.md', mode='r', encoding='utf8').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/CalvinSprouse/plotassist',
     classifiers=[
