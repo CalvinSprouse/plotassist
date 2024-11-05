@@ -1,4 +1,4 @@
-# My Package
+# Plot Assist
 
 A package for handling MATLAB data and labeling Matplotlib plots.
 
