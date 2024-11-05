@@ -63,7 +63,8 @@ class GroupedBarPlot:
 
         # save variables
         self.df = df
-        self.label_dict = label_dict
+        # save either the dict or an empty dict
+        self.label_dict = label_dict if label_dict else {}
 
 
     def calc_axis_params(self) -> dict[str, float]:
@@ -141,10 +142,6 @@ class GroupedBarPlot:
         **bar_kwargs : Any
             Additional keyword arguments to pass to the ax.bar method.
         """
-        # get the number of groups and list of categories
-        categories = self.df.columns
-        cat_num = len(categories)
-
         # get the param dict and ensure all keys are available
         if axis_param_dict:
             default_params = self.calc_axis_params()
@@ -152,6 +149,11 @@ class GroupedBarPlot:
             axis_param_dict.update({key: default_params[key] for key in missing_keys})
         else:
             axis_param_dict = self.calc_axis_params()
+
+        # ensure bar_kwargs does not contain 'x', 'height', or 'width'
+        prohibited_keys = {'x', 'height', 'width'}
+        if prohibited_keys & set(bar_kwargs.keys()):
+            raise ValueError(f"bar_kwargs cannot contain the keys {prohibited_keys}.")
 
         # set horizontal labels
         x_ticks = axis_param_dict['x_ticks']
@@ -164,30 +166,26 @@ class GroupedBarPlot:
         ax_padding = axis_param_dict['ax_padding']
         ax.set_xlim(min_x - ax_padding, max_x + ax_padding)
 
-        # calculate the bar position offsets in each group
-        group_width = axis_param_dict['group_width']
-        bar_offsets = np.linspace(-group_width/2, group_width/2, len(categories))
-
-        # use the bar_pos_dict instead
+        # plot each bar from the bar_pos_dict
         bar_width = axis_param_dict['bar_width']
-        for group_center, bar_list in axis_param_dict['bar_pos_dict'].items():
+        for _, bar_list in axis_param_dict['bar_pos_dict'].items():
             for j, (cat, bar_center, height) in enumerate(bar_list):
                 # attempt to get the label from the label dict
-                label = cat
-                if self.label_dict:
-                    label = self.label_dict.get(cat, cat)
+                if 'label' not in bar_kwargs:
+                    bar_kwargs['label'] = self.label_dict.get(cat, cat)
 
                 # get the color and handle errors
-                try:
-                    color = self.colormap(j)
-                except ValueError as e:
-                    raise ValueError(f"Colormap must have at least {cat_num} colors.") from e
+                if not ('facecolor' in bar_kwargs or 'color' in bar_kwargs):
+                    try:
+                        bar_kwargs['facecolor'] = self.colormap(j)
+                    except ValueError as e:
+                        cat_num = len(self.df.columns)
+                        raise ValueError(f"Colormap must have at least {cat_num} colors.") from e
 
+                # add the bar using the kwargs dict
                 ax.bar(
-                    bar_center,
-                    height,
+                    x=bar_center,
+                    height=height,
                     width=bar_width,
-                    color=color,
-                    label=label,
                     **bar_kwargs
                 )
