@@ -1,7 +1,3 @@
-# groupedbarplot.py
-
-# A class for creating a grouped bar plot in Matplotlib.
-
 # imports
 from typing import Any
 import matplotlib as mpl
@@ -93,7 +89,28 @@ class GroupedBarPlot:
 
         group_width = ((max_x - min_x) / (group_num-1)) - group_padding
         bar_width = (group_width / cat_num)
+
+        # calculate the center of each group
         x_ticks = np.linspace(min_x, max_x, group_num)
+
+        # for each group calculate the center of each bar
+        bar_pos = {}
+        for i, (_, row_series) in enumerate(self.df.iterrows()):
+            # this will be the key of bar_pos
+            x_tick = x_ticks[i]
+
+            # calculate the left-edge placement of each bar
+            first_left = x_tick - (group_width / 2)
+            last_left = x_tick + (group_width / 2) - bar_width
+
+            # calculate the center placement of each bar
+            bar_centers = np.linspace(first_left, last_left, cat_num) + (bar_width / 2)
+
+            # associate each center with a category and height
+            bar_pos[x_tick] = [
+                (cat, bcen, row_series[cat])
+                for bcen, cat in zip(bar_centers, categories)
+            ]
 
         # create and return the dictionary of axis parameters
         return {
@@ -107,6 +124,7 @@ class GroupedBarPlot:
             'group_width': group_width,
             'bar_width': bar_width,
             'x_ticks': x_ticks,
+            'bar_pos_dict': bar_pos
         }
 
 
@@ -150,21 +168,14 @@ class GroupedBarPlot:
         group_width = axis_param_dict['group_width']
         bar_offsets = np.linspace(-group_width/2, group_width/2, len(categories))
 
-        # iterate over the dataframe
+        # use the bar_pos_dict instead
         bar_width = axis_param_dict['bar_width']
-        for i, (_, row_series) in enumerate(self.df.iterrows()):
-            # get the horizontal placement of the group
-            x_group = x_ticks[i]
-
-            # iterate over the categories
-            for j, category in enumerate(categories):
-                # get the value from row_series
-                value = row_series[category]
-
+        for group_center, bar_list in axis_param_dict['bar_pos_dict'].items():
+            for j, (cat, bar_center, height) in enumerate(bar_list):
                 # attempt to get the label from the label dict
-                label = category
+                label = cat
                 if self.label_dict:
-                    label = self.label_dict.get(category, category)
+                    label = self.label_dict.get(cat, cat)
 
                 # get the color and handle errors
                 try:
@@ -172,11 +183,9 @@ class GroupedBarPlot:
                 except ValueError as e:
                     raise ValueError(f"Colormap must have at least {cat_num} colors.") from e
 
-                # calculate the x position of the bar
-                x_pos = x_group + bar_offsets[j]/2
                 ax.bar(
-                    x_pos,
-                    value,
+                    bar_center,
+                    height,
                     width=bar_width,
                     color=color,
                     label=label,
