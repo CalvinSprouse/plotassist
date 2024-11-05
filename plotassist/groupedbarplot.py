@@ -155,6 +155,10 @@ class GroupedBarPlot:
         if prohibited_keys & set(bar_kwargs.keys()):
             raise ValueError(f"bar_kwargs cannot contain the keys {prohibited_keys}.")
 
+        # check for label or color overrides
+        color_override = {'facecolor', 'color'} & set(bar_kwargs.keys())
+        label_override = 'label' in bar_kwargs
+
         # set horizontal labels
         x_ticks = axis_param_dict['x_ticks']
         ax.set_xticks(x_ticks)
@@ -171,11 +175,11 @@ class GroupedBarPlot:
         for _, bar_list in axis_param_dict['bar_pos_dict'].items():
             for j, (cat, bar_center, height) in enumerate(bar_list):
                 # attempt to get the label from the label dict
-                if 'label' not in bar_kwargs:
+                if not color_override:
                     bar_kwargs['label'] = self.label_dict.get(cat, cat)
 
                 # get the color and handle errors
-                if not ('facecolor' in bar_kwargs or 'color' in bar_kwargs):
+                if not label_override:
                     try:
                         bar_kwargs['facecolor'] = self.colormap(j)
                     except ValueError as e:
