@@ -1,0 +1,8 @@
+# to build
+python -m build
+
+# to test upload
+twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+# to upload to pypi
+twine upload dist/*
