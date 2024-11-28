@@ -2,13 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name='plotassist',
-    version='0.5',
+    version='0.6',
     packages=find_packages(),
     install_requires=[
         'numpy',
         'scipy',
         'matplotlib',
-        'pandas'
+        'pandas',
+        'h5py',
     ],
     author='Calvin Sprouse',
     author_email='calvinsprouse@proton.me',
