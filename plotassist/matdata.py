@@ -94,7 +94,7 @@ def load_h5py(mat_file: PathLike, variable_names: Sequence = None, squeeze_me: b
 
     with h5py.File(mat_file, 'r') as mat:
         # load the data as a dictionary
-        data = {key: mat_to_dict(mat[key]) for key in mat.keys()}
+        data = {k: mat_to_dict(v) for k, v in mat.items()}
 
         # simplify cells to lists
         if simplify_cells:
